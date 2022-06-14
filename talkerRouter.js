@@ -3,15 +3,16 @@ const express = require('express');
 const moment = require('moment');
 
 const router = express.Router();
+const fileName = './talker.json';
 
 async function getAllTalker(req, res) {
-  const talkers = JSON.parse(await fs.readFile('./talker.json', 'utf8'));
+  const talkers = JSON.parse(await fs.readFile(fileName, 'utf8'));
 
   res.status(200).json(talkers);
 }
 
 async function getTalkerById(req, res) {
-  const talkers = JSON.parse(await fs.readFile('./talker.json', 'utf8'));
+  const talkers = JSON.parse(await fs.readFile(fileName, 'utf8'));
 
   const { id } = req.params;
 
@@ -80,7 +81,7 @@ function validateWatchedAtOfTalk(req, res, next) {
 function validateRateOfTalk(req, res, next) {
   const { talk: { rate } } = req.body; 
 
-  if (!rate) return res.status(400).json({ message: 'O campo "rate" é obrigatório' });
+  if (rate === undefined) return res.status(400).json({ message: 'O campo "rate" é obrigatório' });
 
   if (!Number.isInteger(rate) || rate < 1 || rate > 5) {
     return res.status(400).json({ message: 'O campo "rate" deve ser um inteiro de 1 à 5' }); 
@@ -90,15 +91,27 @@ function validateRateOfTalk(req, res, next) {
 }
 
 async function createTalk(req, res) {
-  const talkers = JSON.parse(await fs.readFile('./talker.json', 'utf8'));
+  const talkers = JSON.parse(await fs.readFile(fileName, 'utf8'));
   const { name, age, talk } = req.body;
 
   const newTalker = { id: talkers.length + 1, name, age, talk };
   talkers.push(newTalker);
 
-  await fs.writeFile('./talker.json', JSON.stringify(talkers));
+  await fs.writeFile(fileName, JSON.stringify(talkers));
 
   res.status(201).json(newTalker);
+}
+
+async function editTalker(req, res) {
+  const talkers = JSON.parse(await fs.readFile(fileName, 'utf8'));
+  const { id } = req.params;
+  const { name, age, talk } = req.body;
+
+  const talkerIndex = talkers.findIndex((talker) => talker.id === Number(id));
+  talkers[talkerIndex] = { ...talkers[talkerIndex], name, age, talk };
+  await fs.writeFile(fileName, JSON.stringify(talkers));
+
+  res.status(200).json(talkers[talkerIndex]);
 }
 
 router.get('/', getAllTalker);
@@ -113,5 +126,14 @@ router.post('/',
   validateWatchedAtOfTalk,
   validateRateOfTalk,
   createTalk);
+
+router.put('/:id',
+  validateToken,
+  validateName,
+  validateAge,
+  validateTalk,
+  validateWatchedAtOfTalk,
+  validateRateOfTalk,
+  editTalker);
 
 module.exports = router;
