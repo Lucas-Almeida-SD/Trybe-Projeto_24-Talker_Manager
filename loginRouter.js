@@ -32,7 +32,7 @@ function validatePassword(req, res, next) {
   next();
 }
 
-function login(_req, res) {
+async function login(_req, res) {
   const token = crypto.randomBytes(8).toString('hex');
 
   res.status(200).json({ token });
