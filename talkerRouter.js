@@ -114,6 +114,19 @@ async function editTalker(req, res) {
   res.status(200).json(talkers[talkerIndex]);
 }
 
+async function deleteTalker(req, res) {
+  const talkers = JSON.parse(await fs.readFile(fileName, 'utf8'));
+  const { id } = req.params;
+  
+  const talkerIndex = talkers.findIndex((talker) => talker.id === Number(id));
+
+  talkers.splice(talkerIndex, 1);
+
+  await fs.writeFile(fileName, JSON.stringify(talkers));
+  
+  res.status(204).end();
+}
+
 router.get('/', getAllTalker);
 
 router.get('/:id', getTalkerById);
@@ -135,5 +148,7 @@ router.put('/:id',
   validateWatchedAtOfTalk,
   validateRateOfTalk,
   editTalker);
+
+router.delete('/:id', validateToken, deleteTalker);
 
 module.exports = router;
