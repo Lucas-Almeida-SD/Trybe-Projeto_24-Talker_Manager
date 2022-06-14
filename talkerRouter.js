@@ -127,7 +127,20 @@ async function deleteTalker(req, res) {
   res.status(204).end();
 }
 
+async function searchTalker(req, res) {
+  const talkers = JSON.parse(await fs.readFile(fileName, 'utf8'));
+  const { q: query } = req.query;
+
+  if (!query) return res.status(200).json(talkers);
+
+  const filterTalkers = talkers.filter((talker) => talker.name.includes(query));
+
+  res.status(200).json(filterTalkers);
+}
+
 router.get('/', getAllTalker);
+
+router.get('/search', validateToken, searchTalker);
 
 router.get('/:id', getTalkerById);
 
